@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Clones your repository
 
       - name: Setup SSH Key
         run: |
@@ -20,15 +20,15 @@ jobs:
 
       - name: Deploy to EC2
         run: |
+          scp -o StrictHostKeyChecking=no -i private_key.pem index.html ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/index.html
+          
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
           sudo apt update
           sudo apt install -y nginx
-          sudo rm -rf /var/www/html/index.html
-          echo "Deployed via GitHub Actions" | sudo tee /var/www/html/index.html
+          sudo mv /home/${{ secrets.EC2_USERNAME }}/index.html /var/www/html/index.html
           sudo systemctl restart nginx
           EOF
 
       - name: Verify Deployment
         run: |
           curl -I http://${{ secrets.EC2_HOST }}
-
