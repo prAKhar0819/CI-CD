@@ -1,4 +1,4 @@
-name: Deploy Nginx with index.html
+name: Deploy Nginx to EC2
 
 on:
   push:
@@ -7,23 +7,28 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest  # Use GitHub's runner
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Nginx
+      - name: Setup SSH Key
         run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
           sudo apt update
           sudo apt install -y nginx
-
-      - name: Deploy index.html
-        run: |
-          sudo cp index.html /var/www/html/index.html
+          sudo rm -rf /var/www/html/index.html
+          echo "Deployed via GitHub Actions" | sudo tee /var/www/html/index.html
           sudo systemctl restart nginx
+          EOF
 
-      - name: Verify Nginx Service
+      - name: Verify Deployment
         run: |
-          systemctl status nginx
+          curl -I http://${{ secrets.EC2_HOST }}
 
