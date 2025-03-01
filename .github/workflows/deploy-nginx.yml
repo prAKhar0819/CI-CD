@@ -1,0 +1,29 @@
+name: Deploy Nginx with index.html
+
+on:
+  push:
+    branches:
+      - main  # Runs when pushing to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Nginx
+        run: |
+          sudo apt update
+          sudo apt install -y nginx
+
+      - name: Deploy index.html
+        run: |
+          sudo cp index.html /var/www/html/index.html
+          sudo systemctl restart nginx
+
+      - name: Verify Nginx Service
+        run: |
+          systemctl status nginx
+
