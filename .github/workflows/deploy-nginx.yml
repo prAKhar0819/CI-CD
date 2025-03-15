@@ -1,36 +1,19 @@
 name: Trigger Jenkins Build
 
-
 on:
-
-  push:
-
-    branches:
-
-      - main  # Trigger on push to main branch
-
-    
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
 
 jobs:
+  trigger-jenkins:
+    runs-on: ubuntu-latest
 
-  trigger-jenkins:
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    runs-on: ubuntu-latest
-
-    
-
-    steps:
-
-      - name: Checkout code
-
-        uses: actions/checkout@v2
-
-
-      - name: Trigger Jenkins Job
-
-        run: |
-
-          curl -X POST http://52.212.88.63:8080/job/Ansible-Deployment
-/build \
-
-          --user prAKhar0819:1482d2070fc5a7e2a2971025984fbe750
+      - name: Trigger Jenkins Job
+        run: |
+          curl -X POST "http://52.212.88.63:8080/job/Ansible-Deployment/build" \
+          --user "prAKhar0819:1482d2070fc5a7e2a2971025984fbe750"
