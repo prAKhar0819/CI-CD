@@ -1,34 +1,36 @@
-name: Deploy Nginx to EC2
+name: Trigger Jenkins Build
+
 
 on:
-  push:
-    branches:
-      - main  # Runs when pushing to the main branch
+
+  push:
+
+    branches:
+
+      - main  # Trigger on push to main branch
+
+    
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest  # Use GitHub's runner
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4  # Clones your repository
+  trigger-jenkins:
 
-      - name: Setup SSH Key
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
+    runs-on: ubuntu-latest
 
-      - name: Deploy to EC2
-        run: |
-          scp -o StrictHostKeyChecking=no -i private_key.pem index.html ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/index.html
-          
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} << 'EOF'
-          sudo apt update
-          sudo apt install -y nginx
-          sudo mv /home/${{ secrets.EC2_USERNAME }}/index.html /var/www/html/index.html
-          sudo systemctl restart nginx
-          EOF
+    
 
-      - name: Verify Deployment
-        run: |
-          curl -I http://${{ secrets.EC2_HOST }}
+    steps:
+
+      - name: Checkout code
+
+        uses: actions/checkout@v2
+
+
+      - name: Trigger Jenkins Job
+
+        run: |
+
+          curl -X POST http://52.212.88.63:8080/job/Ansible-Deployment
+/build \
+
+          --user prAKhar0819:1482d2070fc5a7e2a2971025984fbe750
