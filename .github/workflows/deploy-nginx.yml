@@ -15,5 +15,5 @@ jobs:
 
       - name: Trigger Jenkins Job
         run: |
-          curl -X POST "http://54.171.65.59:8080/job/Ansible-Deployment/build" \
+          curl -X POST "http://54.171.65.59:8080/job/deploy-nginx/build" \
           --user "prakhar:11485631773ca4680f3c5c425cf8e5d973"
