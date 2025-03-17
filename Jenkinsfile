@@ -2,109 +2,69 @@ pipeline {
     agent any
 
     environment {
-         // Using SSH key stored in Jenkins credentials
+        // Using SSH key stored in Jenkins credentials
         EC2_SSH_KEY = credentials('ec2_private_key')
         ANSIBLE_HOST_KEY_CHECKING = 'False'
         EMAIL_RECIPIENT = 'prakharsingh1932003@gmail.com'
-
     }
 
     stages {
-        
         stage('Run Ansible Playbook') {
             steps {
                 sh 'ansible-playbook -i /var/lib/jenkins/ansible_quickstart/aws_ec2.yaml /var/lib/jenkins/ansible_quickstart/playbook.yaml -u ubuntu --private-key $EC2_SSH_KEY'
             }
         }
     }
-    
-} post {
 
-        success {
+    post {
+        success {
+            script {
+                def buildNumber = currentBuild.number
+                def user = currentBuild.getBuildCauses()[0]?.userId ?: 'Unknown'
+                def buildTime = new Date(currentBuild.getStartTimeInMillis()).format('yyyy-MM-dd HH:mm:ss')
 
-            script {
+                def emailSubject = "Build #${buildNumber} completed"
+                def emailBody = """
+                    The build number ${buildNumber} has completed successfully.
 
-                def buildNumber = currentBuild.number
+                    Triggered by user: ${user}
 
-                def user = currentBuild.getBuildCauses()[0].userId ?: 'Unknown'  
+                    Build completed at: ${buildTime}
 
-                def buildTime = new Date(currentBuild.getStartTimeInMillis()).format('yyyy-MM-dd HH:mm:ss')
+                    Git commit ID: ${env.GIT_COMMIT}
+                """
 
+                emailext(
+                    to: EMAIL_RECIPIENT,
+                    subject: emailSubject,
+                    body: emailBody
+                )
+            }
+        }
 
-                def emailSubject = "Build #${buildNumber} completed"
+        failure {
+            script {
+                def buildNumber = currentBuild.number
+                def user = currentBuild.getBuildCauses()[0]?.userId ?: 'Unknown'
+                def buildTime = new Date(currentBuild.getStartTimeInMillis()).format('yyyy-MM-dd HH:mm:ss')
 
-                def emailBody = """
+                def emailSubject = "Build #${buildNumber} failed"
+                def emailBody = """
+                    The build number ${buildNumber} has failed.
 
-                    The build number ${buildNumber} has completed successfully.
+                    Triggered by user: ${user}
 
-                    Triggered by user: ${user}
+                    Build failed at: ${buildTime}
 
-                    Build completed at: ${buildTime}
+                    Git commit ID: ${env.GIT_COMMIT}
+                """
 
-                    Git commit ID: ${env.GIT_COMMIT_ID}
-
-                """
-
-               emailext(
-
-                    to: EMAIL_RECIPIENT,
-
-                    subject: emailSubject,
-
-                    body: emailBody
-
-                )
-
-               
-
-            }
-
-        }
-
-
-        failure {
-
-            script {
-
-                def buildNumber = currentBuild.number
-
-                def user = currentBuild.getBuildCauses()[0].userId ?: 'Unknown'
-
-                def buildTime = new Date(currentBuild.getStartTimeInMillis()).format('yyyy-MM-dd HH:mm:ss')
-
-
-                def emailSubject = "Build #${buildNumber} failed"
-
-                def emailBody = """
-
-                    The build number ${buildNumber} has failed.
-
-                    Triggered by user: ${user}
-
-                    Build failed at: ${buildTime}
-
-                    Git commit ID: ${env.GIT_COMMIT_ID}
-
-                """
-
-
-                emailext(
-
-                    to: EMAIL_RECIPIENT,
-
-                    subject: emailSubject,
-
-                    body: emailBody
-
-                )
-
-
-            
-
-            }
-
-        }
-
-    }
-
-
+                emailext(
+                    to: EMAIL_RECIPIENT,
+                    subject: emailSubject,
+                    body: emailBody
+                )
+            }
+        }
+    }
+}
